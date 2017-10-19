@@ -29,20 +29,12 @@ export class TodoService {
     socket.emit('addTodo', todo);
   }
 
-  updateTodo(todo:any):Promise<any>{
-    return this.http
-               .put(this.apiUrl, todo)
-               .toPromise()
-               .then(this.handleData)
-               .catch(this.handleData);
+  updateTodo(todo:any,socket:any):void{
+    socket.emit('updateTodo', todo);
   }
 
-  deleteTodo(todo:any):Promise<any>{
-    return this.http
-               .delete(this.apiUrl + todo._id)
-               .toPromise()
-               .then(this.handleData)
-               .catch(this.handleError);
+  deleteTodo(todo:any,socket:any):void{
+    socket.emit('deleteTodo', todo);
   }
 
   private handleData(res: any) {

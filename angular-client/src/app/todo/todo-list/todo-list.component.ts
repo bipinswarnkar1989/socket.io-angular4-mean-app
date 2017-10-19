@@ -29,19 +29,35 @@ export class TodoListComponent implements OnInit {
     this.todoService.getTodos()
                     .then(td => this.todos = td.todos );
     this.socket = io.connect(this.url);
+    // Receive Added Todo
     this.socket.on('TodoAdded', (data) => {
       console.log('TodoAdded: '+JSON.stringify(data));
       this.todos.push(data.todo);
+    });
+    //Receive Updated Todo
+    this.socket.on('TodoUpdated', (data) => {
+      console.log('TodoUpdated: '+JSON.stringify(data));
+      const updatedTodos = this.todos.map(t => {
+          if(data.todo._id !== t._id){
+            return t;
+          }
+          return { ...t, ...data.todo };
+        })
+        this.apiMessage = data.message;
+        this.todos = updatedTodos;
+    });
+    //Receive Deleted Todo and remove it from liste
+    this.socket.on('TodoDeleted', (data) => {
+      console.log('TodoDeleted: '+JSON.stringify(data));
+      const filteredTodos = this.todos.filter(t => t._id !== data.todo._id);
+      this.apiMessage = data.message;
+      this.todos = filteredTodos;
     });
   }
 
   AddTodo(todo:any):void{
     if(!todo){ return; }
-    this.todoService.createTodo(todo,this.socket)
-                    // .then(td => {
-                    //   console.log(td);
-                    //   this.todos.push(td.todo);
-                    // })
+    this.todoService.createTodo(todo,this.socket);
   }
 
   showEditTodo(todo:any):void{
@@ -52,17 +68,7 @@ export class TodoListComponent implements OnInit {
   EditTodo(todo:any):void{
     if(!todo){ return; }
     todo.id = this.todoToEdit._id;
-    this.todoService.updateTodo(todo)
-                    .then(td => {
-                      const updatedTodos = this.todos.map(t => {
-                        if(td.todo._id !== t._id){
-                          return t;
-                        }
-                        return { ...t, ...td.todo };
-                      })
-                      this.apiMessage = td.message;
-                      this.todos = updatedTodos;
-                    })
+    this.todoService.updateTodo(todo,this.socket);
   }
 
  showDeleteTodo(todo:any):void{
@@ -72,12 +78,7 @@ export class TodoListComponent implements OnInit {
 
  DeleteTodo(todo:any):void{
    if(!todo){ return; }
-   this.todoService.deleteTodo(todo)
-                   .then(td => {
-                     const filteredTodos = this.todos.filter(t => t._id !== td.todo._id);
-                     this.apiMessage = td.message;
-                     this.todos = filteredTodos;
-                   })
+   this.todoService.deleteTodo(todo,this.socket);
  }
 
 }
