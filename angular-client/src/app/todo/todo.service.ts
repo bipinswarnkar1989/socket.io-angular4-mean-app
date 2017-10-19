@@ -25,11 +25,8 @@ export class TodoService {
                     .catch(this.handleError)
   }
 
-  createTodo(todo:any): Promise<any>{
-    return this.http.post(this.apiUrl, todo)
-               .toPromise()
-               .then(this.handleData)
-               .catch(this.handleError)
+  createTodo(todo:any,socket:any): void{
+    socket.emit('addTodo', todo);
   }
 
   updateTodo(todo:any):Promise<any>{

@@ -3,6 +3,9 @@ import { Component, OnInit } from '@angular/core';
 
 import { TodoService } from '../todo.service';
 
+import io from "socket.io-client";
+
+
 @Component({
   selector: 'app-todo-list',
   templateUrl: './todo-list.component.html',
@@ -16,21 +19,29 @@ export class TodoListComponent implements OnInit {
   fetchingData:boolean = false;
   apiMessage:string;
 
+  private url = 'http://localhost:3001';
+  private socket;
+
   constructor(private todoService:TodoService) { }
 
   ngOnInit(): void {
     this.todoService.showAddTodoBox = true;
     this.todoService.getTodos()
-                    .then(td => this.todos = td.todos )
+                    .then(td => this.todos = td.todos );
+    this.socket = io.connect(this.url);
+    this.socket.on('TodoAdded', (data) => {
+      console.log('TodoAdded: '+JSON.stringify(data));
+      this.todos.push(data.todo);
+    });
   }
 
   AddTodo(todo:any):void{
     if(!todo){ return; }
-    this.todoService.createTodo(todo)
-                    .then(td => {
-                      console.log(td);
-                      this.todos.push(td.todo);
-                    })
+    this.todoService.createTodo(todo,this.socket)
+                    // .then(td => {
+                    //   console.log(td);
+                    //   this.todos.push(td.todo);
+                    // })
   }
 
   showEditTodo(todo:any):void{
